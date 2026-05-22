@@ -33,7 +33,7 @@ public class PaymentAuthController {
     @Path("/ready")
     @RunOnVirtualThread
     public Response ready(){
-        if(paymentAuthService.validatorDataset)return Response.status(200).entity(null).build();
-        return Response.status(404).entity(null).build();
+        if(paymentAuthService.isReady())return Response.status(200).entity(null).build();
+        return Response.status(400).entity(null).build();
     }
 }

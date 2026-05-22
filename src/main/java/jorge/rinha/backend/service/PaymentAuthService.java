@@ -13,12 +13,17 @@ import jorge.rinha.backend.utils.Utils;
 import java.io.*;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.zip.GZIPInputStream;
 
 @ApplicationScoped
 public class PaymentAuthService {
 
-    public boolean validatorDataset = false;
+    private final AtomicBoolean ready = new AtomicBoolean(false);
+
+    public boolean isReady() {
+        return ready.get();
+    }
 
     private static final float MAX_AMOUNT              = 10000.0f;
     private static final float MAX_MERCHANT_AVG_AMOUNT = 10000.0f;
@@ -41,33 +46,39 @@ public class PaymentAuthService {
     private int totalVectors;
     private MappedByteBuffer buffer;
 
-    void onStart(@Observes StartupEvent event) throws Exception {
-        long start = System.currentTimeMillis();
+    void onStart(@Observes StartupEvent event) {
+        Thread.ofVirtual().start(() -> {
+            try {
+                long start = System.currentTimeMillis();
 
-        String binPath       = System.getenv().getOrDefault("DATA_BIN_PATH",      "/data/data.bin");
-        String centroidsPath = System.getenv().getOrDefault("CENTROIDS_BIN_PATH", "/data/data_centroids.bin");
-        boolean loadDataset  = "true".equals(System.getenv("LOAD_DATASET"));
+                String binPath       = System.getenv().getOrDefault("DATA_BIN_PATH",      "/data/data.bin");
+                String centroidsPath = System.getenv().getOrDefault("CENTROIDS_BIN_PATH", "/data/data_centroids.bin");
+                boolean loadDataset  = "true".equals(System.getenv("LOAD_DATASET"));
 
-        if (loadDataset) {
-            generateDataset(binPath, centroidsPath);
-        } else {
-            waitForDataset(binPath, centroidsPath);
-        }
+                if (loadDataset) {
+                    generateDataset(binPath, centroidsPath);
+                } else {
+                    waitForDataset(binPath, centroidsPath);
+                }
 
-        loadCentroids(centroidsPath);
+                loadCentroids(centroidsPath);
 
-        File binFile = new File(binPath);
-        RandomAccessFile raf = new RandomAccessFile(binFile, "r");
-        FileChannel channel = raf.getChannel();
-        this.buffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, binFile.length());
+                File binFile = new File(binPath);
+                RandomAccessFile raf = new RandomAccessFile(binFile, "r");
+                FileChannel channel = raf.getChannel();
+                this.buffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, binFile.length());
+                channel.close();
+                raf.close();
 
-        channel.close();
-        raf.close();
+                long end = System.currentTimeMillis();
+                System.out.printf("Dataset ready in %d ms%n", end - start);
 
-        long end = System.currentTimeMillis();
-        System.out.printf("Dataset ready in %d ms%n", end - start);
+                ready.set(true);
 
-        validatorDataset = true;
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to load dataset", e);
+            }
+        });
     }
     private void generateDataset(String binPath, String centroidsPath) throws Exception {
         System.out.println("Generating dataset...");
