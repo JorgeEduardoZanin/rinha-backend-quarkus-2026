@@ -3,9 +3,8 @@ version: '3.9'
 services:
 
   app1:
-    build:
-      context: .
-      dockerfile: src/main/docker/Dockerfile.native-micro
+    platform: linux/amd64
+    image: jorgedevsoftware/rinha-backend-quarkus-2026:latest
     container_name: rinha-app1
     user: root
     environment:
@@ -23,9 +22,8 @@ services:
       - rinha
 
   app2:
-    build:
-      context: .
-      dockerfile: src/main/docker/Dockerfile.native-micro
+    platform: linux/amd64
+    image: jorgedevsoftware/rinha-backend-quarkus-2026:latest
     container_name: rinha-app2
     environment:
       LOAD_DATASET: "false"
@@ -34,7 +32,8 @@ services:
     volumes:
       - dataset:/data
     depends_on:
-      - app1
+      app1:
+        condition: service_started
     deploy:
       resources:
         limits:
@@ -44,6 +43,7 @@ services:
       - rinha
 
   haproxy:
+    platform: linux/amd64
     image: haproxy:2.8-alpine
     container_name: rinha-haproxy
     ports:
@@ -51,8 +51,10 @@ services:
     volumes:
       - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
     depends_on:
-      - app1
-      - app2
+      app1:
+        condition: service_started
+      app2:
+        condition: service_started
     deploy:
       resources:
         limits:
