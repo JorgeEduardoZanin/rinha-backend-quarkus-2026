@@ -1,0 +1,69 @@
+version: '3.9'
+
+services:
+
+  app1:
+    build:
+      context: .
+      dockerfile: src/main/docker/Dockerfile.native-micro
+    container_name: rinha-app1
+    user: root
+    environment:
+      LOAD_DATASET: "true"
+      DATA_BIN_PATH: "/data/data.bin"
+      CENTROIDS_BIN_PATH: "/data/data_centroids.bin"
+    volumes:
+      - dataset:/data
+    deploy:
+      resources:
+        limits:
+          cpus: "0.4"
+          memory: "275MB"
+    networks:
+      - rinha
+
+  app2:
+    build:
+      context: .
+      dockerfile: src/main/docker/Dockerfile.native-micro
+    container_name: rinha-app2
+    environment:
+      LOAD_DATASET: "false"
+      DATA_BIN_PATH: "/data/data.bin"
+      CENTROIDS_BIN_PATH: "/data/data_centroids.bin"
+    volumes:
+      - dataset:/data
+    depends_on:
+      - app1
+    deploy:
+      resources:
+        limits:
+          cpus: "0.4"
+          memory: "50MB"
+    networks:
+      - rinha
+
+  haproxy:
+    image: haproxy:2.8-alpine
+    container_name: rinha-haproxy
+    ports:
+      - "9999:9999"
+    volumes:
+      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    depends_on:
+      - app1
+      - app2
+    deploy:
+      resources:
+        limits:
+          cpus: "0.2"
+          memory: "25MB"
+    networks:
+      - rinha
+
+volumes:
+  dataset:
+
+networks:
+  rinha:
+    driver: bridge

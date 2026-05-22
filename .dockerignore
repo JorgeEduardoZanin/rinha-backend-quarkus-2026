@@ -1,0 +1,7 @@
+.idea/
+.git/
+.mvn/
+mvnw.cmd
+README.md
+target/
+!target/*-runner
