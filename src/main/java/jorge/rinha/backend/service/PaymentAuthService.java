@@ -33,12 +33,11 @@ public class PaymentAuthService {
     private static final float AMOUNT_VS_AVG_RATIO     = 10.0f;
     private static final float MAX_KM                  = 1000.0f;
 
-    private static final int NUM_BUCKETS   = 1024;
+    private static final int NUM_BUCKETS   = 4096;
     private static final int VECTOR_SIZE   = 14;
     private static final int FLOAT_SIZE    = 4;
     private static final int REGISTER_SIZE = (VECTOR_SIZE * FLOAT_SIZE) + 1; // 57 bytes
-    private static final int LSH_BITS = 6; // 2^6 = 64 baldes
-    private static final int NUM_BUCKETS_LSH = 64;
+    private static final int LSH_BITS = 6;
     private final float[][] hyperplanes = new float[LSH_BITS][VECTOR_SIZE];
 
     private final long[]    offsets   = new long[NUM_BUCKETS + 1];
