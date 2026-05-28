@@ -4,7 +4,7 @@ services:
 
   app1:
     platform: linux/amd64
-    image: jorgedevsoftware/rinha-backend-quarkus-2026:4.0
+    image: jorgedevsoftware/rinha-backend-quarkus-2026:5.0
     container_name: rinha-app1
     user: root
     environment:
@@ -23,7 +23,7 @@ services:
 
   app2:
     platform: linux/amd64
-    image: jorgedevsoftware/rinha-backend-quarkus-2026:4.0
+    image: jorgedevsoftware/rinha-backend-quarkus-2026:5.0
     container_name: rinha-app2
     environment:
       LOAD_DATASET: "false"
