@@ -4,7 +4,7 @@ services:
 
   app1:
     platform: linux/amd64
-    image: jorgedevsoftware/rinha-backend-quarkus-2026:2.0
+    image: jorgedevsoftware/rinha-backend-quarkus-2026:3.0
     container_name: rinha-app1
     user: root
     environment:
@@ -16,14 +16,14 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.4"
-          memory: "275MB"
+          cpus: "0.45"
+          memory: "270MB"
     networks:
       - rinha
 
   app2:
     platform: linux/amd64
-    image: jorgedevsoftware/rinha-backend-quarkus-2026:2.0
+    image: jorgedevsoftware/rinha-backend-quarkus-2026:3.0
     container_name: rinha-app2
     environment:
       LOAD_DATASET: "false"
@@ -37,8 +37,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.4"
-          memory: "50MB"
+          cpus: "0.45"
+          memory: "55MB"
     networks:
       - rinha
 
@@ -58,7 +58,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.2"
+          cpus: "0.1"
           memory: "25MB"
     networks:
       - rinha
