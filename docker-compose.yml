@@ -13,7 +13,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.4"
+          cpus: "0.45"
           memory: "85MB"
     networks:
       - rinha
@@ -29,7 +29,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.4"
+          cpus: "0.45"
           memory: "85MB"
     networks:
       - rinha
@@ -50,7 +50,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.2"
+          cpus: "0.15"
           memory: "30MB"
     networks:
       - rinha
