@@ -13,6 +13,65 @@ services:
     deploy:
       resources:
         limits:
+          cpus: "0.40"
+          memory: "100MB"
+    networks:
+      - rinha
+
+  app2:
+    platform: linux/amd64
+    image: jorgedevsoftware/rinha-backend-java-quarkus-2026:1001.0
+    container_name: rinha-app2
+    environment:
+      LOAD_DATASET: "false"
+      DATA_BIN_PATH: "/work/data/data.bin"
+      CENTROIDS_BIN_PATH: "/work/data/data_centroids.bin"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.40"
+          memory: "100MB"
+    networks:
+      - rinha
+
+  haproxy:
+    platform: linux/amd64
+    image: haproxy:2.8-alpine
+    container_name: rinha-haproxy
+    ports:
+      - "9999:9999"
+    volumes:
+      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    depends_on:
+      app1:
+        condition: service_started
+      app2:
+        condition: service_started
+    deploy:
+      resources:
+        limits:
+          cpus: "0.2"
+          memory: "50MB"
+    networks:
+      - rinha
+
+networks:
+  rinha:
+    driver: bridgeversion: '3.9'
+
+services:
+
+  app1:
+    platform: linux/amd64
+    image: jorgedevsoftware/rinha-backend-java-quarkus-2026:1001.0
+    container_name: rinha-app1
+    environment:
+      LOAD_DATASET: "false"
+      DATA_BIN_PATH: "/work/data/data.bin"
+      CENTROIDS_BIN_PATH: "/work/data/data_centroids.bin"
+    deploy:
+      resources:
+        limits:
           cpus: "0.4"
           memory: "100MB"
     networks:
