@@ -1,6 +1,7 @@
 version: '3.9'
 
 services:
+
   app1:
     platform: linux/amd64
     image: jorgedevsoftware/rinha-backend-java-quarkus-2026:1002.0
@@ -12,7 +13,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.4"
+          cpus: "0.39"
           memory: "100MB"
     networks:
       - rinha
@@ -28,7 +29,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.4"
+          cpus: "0.39"
           memory: "100MB"
     networks:
       - rinha
@@ -49,7 +50,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.2"
+          cpus: "0.22"
           memory: "50MB"
     networks:
       - rinha
