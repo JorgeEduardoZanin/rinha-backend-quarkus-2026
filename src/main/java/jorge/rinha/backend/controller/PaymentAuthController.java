@@ -1,18 +1,22 @@
 package jorge.rinha.backend.controller;
 
-import io.smallrye.common.annotation.RunOnVirtualThread;
-import jakarta.inject.Inject;
-import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
-import jorge.rinha.backend.dto.request.PaymentAuthRequest;
-import jorge.rinha.backend.dto.response.PaymentAuthResponse;
-import jorge.rinha.backend.dto.response.Result;
+import io.quarkus.vertx.web.Route;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.ext.web.RoutingContext;
+import jakarta.enterprise.context.ApplicationScoped;
 import jorge.rinha.backend.service.PaymentAuthService;
 
-@Path("/")
+/**
+ * Controller responsável pelos endpoints HTTP da API de detecção de fraude.
+ *
+ * <p>Expõe a rota principal de cálculo de score de fraude e uma rota simples
+ * de readiness para indicar se o dataset/modelo já foi carregado em memória.</p>
+ */
+@ApplicationScoped
 public class PaymentAuthController {
 
+    private static final String CONTENT_TYPE = "content-type";
+    private static final String APPLICATION_JSON = "application/json";
 
     private final PaymentAuthService paymentAuthService;
 
@@ -20,20 +24,46 @@ public class PaymentAuthController {
         this.paymentAuthService = paymentAuthService;
     }
 
-    @POST
-    @Path("/fraud-score")
-    //@RunOnVirtualThread
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_JSON)
-    public Result processor(PaymentAuthRequest req){
-        return paymentAuthService.processor(req);
+    /**
+     * Quarkus Vert.x Web, menos abstrações e mais controle.
+     * Processa uma requisição de score de fraude.
+     *
+     * <p>Quando o serviço ainda não está pronto, retorna uma resposta fixa de fraude máxima.
+     * Caso contrário, lê o corpo da requisição como {@link Buffer}, delega o processamento ao
+     * {@link PaymentAuthService} e retorna o JSON gerado pelo serviço.</p>
+     *
+     * @param ctx contexto HTTP da requisição atual
+     */
+    @Route(path = "/fraud-score", methods = Route.HttpMethod.POST)
+    void fraud(RoutingContext ctx) {
+        if (!paymentAuthService.isReady()) {
+            ctx.response()
+                    .putHeader(CONTENT_TYPE, APPLICATION_JSON)
+                    .end(PaymentAuthService.RESULT_JSONS[5]);
+            return;
+        }
+
+        Buffer body = ctx.body().buffer();
+        String result = paymentAuthService.processor(body);
+
+        ctx.response()
+                .putHeader(CONTENT_TYPE, APPLICATION_JSON)
+                .end(result);
     }
 
-    @GET
-    @Path("/ready")
-    @RunOnVirtualThread
-    public Response ready(){
-        if(paymentAuthService.isReady())return Response.status(200).entity(null).build();
-        return Response.status(400).entity(null).build();
+    /**
+     * Quarkus Vert.x Web, menos abstrações e mais controle.
+     * Endpoint de readiness da aplicação.
+     *
+     * <p>Retorna HTTP 200 quando o serviço já terminou de carregar o dataset/modelo.
+     * Enquanto o serviço ainda não estiver pronto, retorna HTTP 400.</p>
+     *
+     * @param ctx contexto HTTP da requisição atual
+     */
+    @Route(path = "/ready", methods = Route.HttpMethod.GET)
+    void ready(RoutingContext ctx) {
+        ctx.response()
+                .setStatusCode(paymentAuthService.isReady() ? 200 : 400)
+                .end();
     }
 }

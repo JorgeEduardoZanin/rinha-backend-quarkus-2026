@@ -3,27 +3,46 @@ FROM ghcr.io/graalvm/native-image-community:25 AS builder
 
 WORKDIR /build
 
-# instala maven
 RUN microdnf install -y maven
 
 COPY pom.xml .
-# baixa dependencias primeiro (cache de layer)
 RUN mvn dependency:go-offline -q
 
 COPY src ./src
+
 RUN mvn package -Pnative -DskipTests
+
+# Gera os binários do dataset DURANTE O BUILD da imagem
+RUN mkdir -p /build/generated-data && \
+    GENERATE_DATASET_ONLY=true \
+    LOAD_DATASET=true \
+    DATA_BIN_PATH=/build/generated-data/data.bin \
+    CENTROIDS_BIN_PATH=/build/generated-data/data_centroids.bin \
+    /build/target/*-runner
+
 
 # Stage 2 — imagem final
 FROM quay.io/quarkus/ubi9-quarkus-micro-image:2.0
 
 WORKDIR /work/
-RUN chown 1001 /work \
-    && chmod "g+rwX" /work \
-    && chown 1001:root /work
+
+USER root
+
+RUN mkdir -p /work/data && \
+    chown -R 1001:root /work && \
+    chmod -R "g+rwX" /work
 
 COPY --from=builder --chown=1001:root --chmod=0755 /build/target/*-runner /work/application
 
+COPY --from=builder --chown=1001:root /build/generated-data/data.bin /work/data/data.bin
+COPY --from=builder --chown=1001:root /build/generated-data/data_centroids.bin /work/data/data_centroids.bin
+
+ENV LOAD_DATASET=false
+ENV DATA_BIN_PATH=/work/data/data.bin
+ENV CENTROIDS_BIN_PATH=/work/data/data_centroids.bin
+
 EXPOSE 8080
+
 USER 1001
 
 ENTRYPOINT ["./application", "-Dquarkus.http.host=0.0.0.0"]

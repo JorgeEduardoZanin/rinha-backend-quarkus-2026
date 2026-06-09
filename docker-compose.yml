@@ -1,44 +1,33 @@
-version: '3.9'
-
 services:
-
   app1:
     platform: linux/amd64
-    image: jorgedevsoftware/rinha-backend-quarkus-2026:latest
+    image: jorgedevsoftware/rinha-backend-java-quarkus-2026:132.0
     container_name: rinha-app1
-    user: root
     environment:
-      LOAD_DATASET: "true"
-      DATA_BIN_PATH: "/data/data.bin"
-      CENTROIDS_BIN_PATH: "/data/data_centroids.bin"
-    volumes:
-      - dataset:/data
+      LOAD_DATASET: "false"
+      DATA_BIN_PATH: "/work/data/data.bin"
+      CENTROIDS_BIN_PATH: "/work/data/data_centroids.bin"
     deploy:
       resources:
         limits:
           cpus: "0.4"
-          memory: "275MB"
+          memory: "160MB"
     networks:
       - rinha
 
   app2:
     platform: linux/amd64
-    image: jorgedevsoftware/rinha-backend-quarkus-2026:latest
+    image: jorgedevsoftware/rinha-backend-java-quarkus-2026:132.0
     container_name: rinha-app2
     environment:
       LOAD_DATASET: "false"
-      DATA_BIN_PATH: "/data/data.bin"
-      CENTROIDS_BIN_PATH: "/data/data_centroids.bin"
-    volumes:
-      - dataset:/data
-    depends_on:
-      app1:
-        condition: service_started
+      DATA_BIN_PATH: "/work/data/data.bin"
+      CENTROIDS_BIN_PATH: "/work/data/data_centroids.bin"
     deploy:
       resources:
         limits:
           cpus: "0.4"
-          memory: "50MB"
+          memory: "160MB"
     networks:
       - rinha
 
@@ -62,9 +51,6 @@ services:
           memory: "25MB"
     networks:
       - rinha
-
-volumes:
-  dataset:
 
 networks:
   rinha:
